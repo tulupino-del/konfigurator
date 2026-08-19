@@ -1,38 +1,25 @@
 "use client";
+
 import React, { useState } from "react";
-import Sidebar, { ConfigState } from "./components/Sidebar";
-import Canvas from "./components/Canvas";
 
 export default function Home() {
-  const [config, setConfig] = useState<ConfigState>({
-    krok: 1,
-    sablona: "BASIC TRACK",
-    delka: 1000,
-    sirka: 120,
-    znacky: { start: true, cil: true, cisla: true, cary: true },
-    logoUrl: null,
-    text: "VAS-FLOORS",
-    barvaPodlahy: "#121212",
-    barvaCar: "#ffffff",
-  });
-
-  const [modalOpen, setModalOpen] = useState(false);
+  const [krok, setKrok] = useState(1);
+  const [delka, setDelka] = useState(1000);
+  const [sirka, setSirka] = useState(120);
 
   return (
-    <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px", display: "flex", flexWrap: "wrap", gap: "20px", minHeight: "100vh" }}>
-      <Sidebar config={config} setConfig={setConfig} onOpenModal={() => setModalOpen(true)} />
-      <Canvas config={config} setConfig={setConfig} />
+    <main style={{ padding: "40px", maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
+      <h1 style={{ color: "#e11d48" }}>Konfigurátor SprintTrack — VAS-FLOORS</h1>
+      <p style={{ color: "#9ca3af", marginBottom: "30px" }}>Aplikace je úspěšně v provozu!</p>
 
-      {modalOpen && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
-          <div style={{ background: "#181920", padding: "24px", borderRadius: "12px", width: "320px", border: "1px solid #2d313e" }}>
-            <h3>Poptávka konfigurace</h3>
-            <p style={{ fontSize: "12px", color: "#9ca3af", margin: "10px 0" }}>Délka: {config.delka} cm, Šířka: {config.sirka} cm</p>
-            <button onClick={() => { alert("Odesláno!"); setModalOpen(false); }} style={{ width: "100%", padding: "10px", background: "#e11d48", color: "#fff", border: "none", borderRadius: "6px" }}>Potvrdit odeslání</button>
-            <button onClick={() => setModalOpen(false)} style={{ width: "100%", padding: "8px", background: "transparent", color: "#9ca3af", border: "none", marginTop: "6px" }}>Zavřít</button>
-          </div>
-        </div>
-      )}
+      <div style={{ background: "#181920", padding: "20px", borderRadius: "12px", border: "1px solid #2d313e", display: "inline-block", textAlign: "left", minWidth: "300px" }}>
+        <h3>Krok {krok} z 6</h3>
+        <p>Délka: <strong>{delka} cm</strong></p>
+        <p>Šířka: <strong>{sirka} cm</strong></p>
+        <button onClick={() => setKrok((k) => (k % 6) + 1)} style={{ padding: "10px 20px", background: "#e11d48", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", marginTop: "10px" }}>
+          Další krok
+        </button>
+      </div>
     </main>
   );
 }
