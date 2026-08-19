@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konfigurátor SprintTrack | VAS-FLOORS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0d0e12; color: #ffffff; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    
+    .configurator-container { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1200px; background: #12141c; border-radius: 12px; border: 1px solid #232631; padding: 20px; }
+    
+    /* Levý panel */
+    .sidebar { flex: 1 1 320px; background: #181920; padding: 24px; border-radius: 8px; border: 1px solid #2d313e; display: flex; flex-direction: column; justify-content: space-between; }
+    .step-title { font-size: 11px; color: #e11d48; font-weight: bold; margin-bottom: 6px; letter-spacing: 1px; }
+    .step-heading { font-size: 16px; font-weight: bold; margin-bottom: 16px; }
+    
+    .control-group { display: none; margin-bottom: 20px; }
+    .control-group.active { display: block; }
+    
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .btn-option { padding: 12px; background: #232631; color: #fff; border: 1px solid #323748; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+    .btn-option.selected { background: #e11d48; border-color: #e11d48; }
+    
+    label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px; }
+    input[type="range"], input[type="text"] { width: 100%; padding: 10px; background: #232631; border: 1px solid #323748; color: #fff; border-radius: 6px; margin-bottom: 12px; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 8px; cursor: pointer; color: #fff; }
+    
+    .nav-buttons { display: flex; gap: 8px; margin-top: 20px; }
+    .btn-nav { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-prev { background: #232631; color: #fff; }
+    .btn-next { background: #e11d48; color: #fff; }
+
+    /* Pravé plátno */
+    .canvas-wrapper { flex: 2 1 500px; background: #090a0d; border-radius: 8px; border: 1px solid #2d313e; display: flex; flex-direction: column; overflow: hidden; min-height: 500px; }
+    .tabs-header { display: flex; background: #181920; border-bottom: 1px solid #2d313e; overflow-x: auto; }
+    .tab-btn { flex: 1; padding: 12px 8px; background: transparent; color: #9ca3af; border: none; border-bottom: 2px solid transparent; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; white-space: nowrap; }
+    .tab-btn.active { color: #e11d48; border-bottom-color: #e11d48; background: #232631; }
+    
+    .preview-area { flex: 1; display: flex; justify-content: center; align-items: center; padding: 40px; position: relative; }
+    .zoom-controls { position: absolute; bottom: 15px; right: 15px; display: flex; flex-direction: column; gap: 4px; }
+    .zoom-btn { width: 32px; height: 32px; background: #232631; color: #fff; border: 1px solid #323748; border-radius: 4px; cursor: pointer; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="configurator-container">
+  
+  <!-- LEVÝ PANEL -->
+  <div class="sidebar">
+    <div>
+      <div class="step-title" id="stepIndicator">KROK 1 ZE 6</div>
+      <div class="step-heading" id="stepHeading">VYBERTE ŠABLONU</div>
+
+      <!-- KROK 1: Šablona -->
+      <div class="control-group active" id="step1">
+        <div class="btn-grid">
+          <button class="btn-option selected" onclick="setOption('sablona', 'BASIC TRACK', this)">BASIC TRACK</button>
+          <button class="btn-option" onclick="setOption('sablona', 'HYROX SETUP', this)">HYROX SETUP</button>
+          <button class="btn-option" onclick="setOption('sablona', 'BRAND MAT', this)">BRAND MAT</button>
+          <button class="btn-option" onclick="setOption('sablona', 'WIDE TRACK', this)">WIDE TRACK</button>
+        </div>
+      </div>
+
+      <!-- KROK 2: Rozměry -->
+      <div class="control-group" id="step2">
+        <label>Délka: <span id="delkaVal">1000</span> cm</label>
+        <input type="range" min="500" max="2500" step="50" value="1000" id="inputDelka" oninput="updateConfig()">
+        <label>Šířka: <span id="sirkaVal">120</span> cm</label>
+        <input type="range" min="100" max="400" step="10" value="120" id="inputSirka" oninput="updateConfig()">
+      </div>
+
+      <!-- KROK 3: Značení -->
+      <div class="control-group" id="step3">
+        <label class="checkbox-label"><input type="checkbox" id="checkStart" checked onchange="updateConfig()"> Zobrazit START</label>
+        <label class="checkbox-label"><input type="checkbox" id="checkCil" checked onchange="updateConfig()"> Zobrazit CÍL</label>
+        <label class="checkbox-label"><input type="checkbox" id="checkCary" checked onchange="updateConfig()"> Vodicí čáry</label>
+        <label class="checkbox-label"><input type="checkbox" id="checkCisla" checked onchange="updateConfig()"> Číslování metráže</label>
+      </div>
+
+      <!-- KROK 4: Logo -->
+      <div class="control-group" id="step4">
+        <label>Nahrát logo (PNG / SVG):</label>
+        <input type="file" accept="image/*" onchange="handleLogoUpload(event)">
+      </div>
+
+      <!-- KROK 5: Text -->
+      <div class="control-group" id="step5">
+        <label>Text na dráze:</label>
+        <input type="text" id="inputText" value="VAS-FLOORS" oninput="updateConfig()">
+      </div>
+
+      <!-- KROK 6: Barvy -->
+      <div class="control-group" id="step6">
+        <label>Barva podlahy:</label>
+        <div class="btn-grid" style="margin-bottom: 12px;">
+          <button class="btn-option selected" style="background:#121212" onclick="setOption('barvaPodlahy', '#121212', this)">Černá</button>
+          <button class="btn-option" style="background:#2a2d34" onclick="setOption('barvaPodlahy', '#2a2d34', this)">Šedá</button>
+          <button class="btn-option" style="background:#1d4ed8" onclick="setOption('barvaPodlahy', '#1d4ed8', this)">Modrá</button>
+          <button class="btn-option" style="background:#b91c1c" onclick="setOption('barvaPodlahy', '#b91c1c', this)">Červená</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn-nav btn-prev" id="btnPrev" onclick="changeStep(-1)" style="display:none;">Zpět</button>
+      <button class="btn-nav btn-next" id="btnNext" onclick="changeStep(1)">Dále</button>
+    </div>
+  </div>
+
+  <!-- PRAVÝ PANEL (NÁHLED) -->
+  <div class="canvas-wrapper">
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="goToStep(1)">01 ŠABLONA</button>
+      <button class="tab-btn" onclick="goToStep(2)">02 ROZMĚR</button>
+      <button class="tab-btn" onclick="goToStep(3)">03 ZNAČENÍ</button>
+      <button class="tab-btn" onclick="goToStep(4)">04 LOGO</button>
+      <button class="tab-btn" onclick="goToStep(5)">05 TEXT</button>
+      <button class="tab-btn" onclick="goToStep(6)">06 BARVY</button>
+    </div>
+
+    <div class="preview-area">
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
+        <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
+      </div>
+
+      <div id="svgContainer" style="transform: scale(1); transition: transform 0.2s;">
+        <!-- SVG se dynamicky přegenerovává -->
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentStep = 1;
+  let currentZoom = 1;
+  let logoUrl = null;
+
+  const config = {
+    sablona: 'BASIC TRACK',
+    delka: 1000,
+    sirka: 120,
+    start: true,
+    cil: true,
+    cary: true,
+    cisla: true,
+    text: 'VAS-FLOORS',
+    barvaPodlahy: '#121212',
+    barvaCar: '#ffffff'
+  };
+
+  const stepTitles = ["VYBERTE ŠABLONU", "NASTAVTE ROZMĚRY", "ZVOLTE ZNAČENÍ", "NAHRAJTE LOGO", "VLASTNÍ TEXT", "VÝBĚR BAREV"];
+
+  function goToStep(step) {
+    currentStep = step;
+    document.getElementById('stepIndicator').innerText = `KROK ${currentStep} ZE 6`;
+    document.getElementById('stepHeading').innerText = stepTitles[currentStep - 1];
+
+    document.querySelectorAll('.control-group').forEach((el, idx) => {
+      el.classList.toggle('active', idx + 1 === currentStep);
+    });
+
+    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+      btn.classList.toggle('active', idx + 1 === currentStep);
+    });
+
+    document.getElementById('btnPrev').style.display = currentStep > 1 ? 'block' : 'none';
+    document.getElementById('btnNext').innerText = currentStep === 6 ? 'Odeslat poptávku' : 'Dále';
+  }
+
+  function changeStep(delta) {
+    if (currentStep === 6 && delta === 1) {
+      alert("Poptávka byla úspěšně odeslána!");
+      return;
+    }
+    goToStep(Math.max(1, Math.min(6, currentStep + delta)));
+  }
+
+  function setOption(key, val, el) {
+    config[key] = val;
+    if (el) {
+      el.parentElement.querySelectorAll('.btn-option').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+    renderSVG();
+  }
+
+  function updateConfig() {
+    config.delka = document.getElementById('inputDelka').value;
+    config.sirka = document.getElementById('inputSirka').value;
+    document.getElementById('delkaVal').innerText = config.delka;
+    document.getElementById('sirkaVal').innerText = config.sirka;
+
+    config.start = document.getElementById('checkStart').checked;
+    config.cil = document.getElementById('checkCil').checked;
+    config.cary = document.getElementById('checkCary').checked;
+    config.cisla = document.getElementById('checkCisla').checked;
+    config.text = document.getElementById('inputText').value;
+
+    renderSVG();
+  }
+
+  function handleLogoUpload(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        logoUrl = ev.target.result;
+        renderSVG();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function adjustZoom(delta) {
+    currentZoom = Math.max(0.5, Math.min(1.8, currentZoom + delta));
+    document.getElementById('svgContainer').style.transform = `scale(${currentZoom})`;
+  }
+
+  function renderSVG() {
+    const svgWidth = Math.max(380, config.delka / 2.5);
+    const svgHeight = Math.max(130, config.sirka * 0.9);
+
+    let html = `<svg width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}" style="background:${config.barvaPodlahy}; border-radius:8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">`;
+
+    if (config.cary) {
+      html += `<line x1="0" y1="10" x2="${svgWidth}" y2="10" stroke="${config.barvaCar}" stroke-width="2" />`;
+      html += `<line x1="0" y1="${svgHeight - 10}" x2="${svgWidth}" y2="${svgHeight - 10}" stroke="${config.barvaCar}" stroke-width="2" />`;
+      html += `<line x1="0" y1="${svgHeight / 2}" x2="${svgWidth}" y2="${svgHeight / 2}" stroke="${config.barvaCar}" stroke-dasharray="8 6" stroke-width="1.5" />`;
+    }
+
+    if (config.start) {
+      html += `<text x="30" y="${svgHeight / 2 + 4}" fill="${config.barvaCar}" font-size="11" font-weight="bold" text-anchor="middle">START</text>`;
+    }
+
+    if (config.cil) {
+      html += `<text x="${svgWidth - 30}" y="${svgHeight / 2 + 4}" fill="${config.barvaCar}" font-size="11" font-weight="bold" text-anchor="middle">CÍL</text>`;
+    }
+
+    if (config.text) {
+      html += `<text x="${svgWidth / 2}" y="${svgHeight - 16}" fill="${config.barvaCar}" font-size="12" font-weight="bold" letter-spacing="2" text-anchor="middle">${config.text}</text>`;
+    }
+
+    if (logoUrl) {
+      html += `<image href="${logoUrl}" x="${svgWidth / 2 - 25}" y="${svgHeight / 2 - 25}" height="30" width="50" preserveAspectRatio="xMidYMid meet"/>`;
+    }
+
+    html += `</svg>`;
+    document.getElementById('svgContainer').innerHTML = html;
+  }
+
+  // Úvodní render
+  renderSVG();
+</script>
+
+</body>
+</html>
